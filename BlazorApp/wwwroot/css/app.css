@@ -54,7 +54,7 @@ a, .btn-link {
 
 .lifespan-bar {
     height: 2px;
-    background-color: yellow;
+    background-color: blue;
     position: absolute;
     bottom: -3px;
     left: 0;
