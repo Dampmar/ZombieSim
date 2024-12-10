@@ -1,0 +1,116 @@
+@page "/map"
+@using BlazorApp.Components
+@inject BlazorApp.Services.SimulationManager SimulationManager
+
+<h3>Zombie Simulation Map</h3>
+
+<div class="map-container">
+    @foreach (var entity in SimulationManager.GetEntities())
+    {
+        <EntityComponent Entity="entity" />
+    }
+</div>
+
+<Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Set Simulation Parameters</Button>
+<Button @onclick="StartSimulation">Start</Button>
+<Button @onclick="StopSimulation">Stop</Button>
+
+<Modal @ref="modal" Title="Set Simulation Parameters">
+    <BodyTemplate>
+        <div class="d-flex flex-column">
+            <div class="d-flex flex-row mb-3">
+                <label>Humans:</label>
+                <RangeInput TValue="int" @bind-Value="initialHumanCount" Min="0" Max="200" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@initialHumanCount</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Zombies:</label>
+                <RangeInput TValue="int" @bind-Value="initialZombieCount" Min="0" Max="200" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@initialZombieCount</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Sanctuaries:</label>
+                <RangeInput TValue="int" @bind-Value="initialSanctuaryCount" Min="0" Max="20" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@initialSanctuaryCount</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Burgers:</label>
+                <RangeInput TValue="int" @bind-Value="initialBurgerCount" Min="0" Max="50" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@initialBurgerCount</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Axes:</label>
+                <RangeInput TValue="int" @bind-Value="initialAxeCount" Min="0" Max="50" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@initialAxeCount</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Human Speed:</label>
+                <RangeInput TValue="int" @bind-Value="humanSpeed" Min="1" Max="10" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@humanSpeed</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Zombie Speed:</label>
+                <RangeInput TValue="int" @bind-Value="zombieSpeed" Min="1" Max="10" />
+                <Badge Color="BadgeColor.Primary" Class="ms-2">@zombieSpeed</Badge>
+            </div>
+            <div class="d-flex flex-row mb-3">
+                <label>Decision Algorithm:</label>
+                <select @bind="selectedAlgorithm">
+                    <option value="RandomDecisionAlgorithm">Random Decision Algorithm</option>
+                    <option value="ProximityDecisionAlgorithm">Proximity Decision Algorithm</option>
+                </select>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveChanges">Save changes</Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+    private Modal modal = default!;
+    private int initialHumanCount = 100;
+    private int initialZombieCount = 50;
+    private int initialSanctuaryCount = 5;
+    private int initialBurgerCount = 5;
+    private int initialAxeCount = 10;
+    private int humanSpeed = 5; // Default speed for humans
+    private int zombieSpeed = 3; // Default speed for zombies
+    private string selectedAlgorithm = "RandomDecisionAlgorithm"; // Default algorithm
+
+    protected override void OnInitialized()
+    {
+        SimulationManager.OnSimulationUpdated += RefreshUI;
+    }
+
+    private async Task OnShowModalClick()
+    {
+        await modal.ShowAsync();
+    }
+
+    private async Task OnHideModalClick()
+    {
+        await modal.HideAsync();
+    }
+
+    private void SaveChanges()
+    {
+        // Enviar los valores al SimulationManager
+        SimulationManager.SetInitialCounts(initialHumanCount, initialZombieCount, initialSanctuaryCount, initialBurgerCount, initialAxeCount, humanSpeed, zombieSpeed, selectedAlgorithm);
+        OnHideModalClick();
+    }
+
+    private async Task StartSimulation() => await SimulationManager.StartSimulation();
+    private void StopSimulation() => SimulationManager.StopSimulation();
+
+    private void RefreshUI()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SimulationManager.OnSimulationUpdated -= RefreshUI;
+    }
+}

@@ -1,0 +1,61 @@
+@typeparam TEntity // Defines a generic type parameter TEntity, which can represent any type passed to the component.
+@implements IDisposable // Indicates that this component implements IDisposable for resource management.
+@using BlazorApp.Entities
+@using BlazorApp.Services
+@using System.Drawing
+@using BlazorApp.Components
+
+@if (Entity != null) // Check if the Entity property has been provided and is not null.
+{
+    // Cast Entity to ISimulationEntity interface for access to properties/methods required by the simulation.
+    var entity = (ISimulationEntity)(object)Entity;
+
+    // Determine lifespan based on entity type (Zombie or Human).
+    // If the entity is a Zombie, get its Lifespan; if a Human, get its Stamina; otherwise set lifespan to 0.
+    var lifespan = entity is Zombie z ? z.Lifespan : entity is Human h ? h.Lifespan : entity is Sanctuary s ? s.Lifespan : entity is BurgerKing bk ? bk.Lifespan : entity is Axe a ? a.Lifespan : 0;
+    
+    // Set maxLifespan based on entity type: assume max lifespan is 200 for zombies and 100 for humans.
+    var maxLifespan = entity is Zombie ? 200 : 100; // Assuming max lifespan for zombies and humans
+
+    // Render the entity with positioning and color based on entity type.
+    <div class="entity" style="position: absolute; top: @(entity.Location.Y)px; left: @(entity.Location.X)px; 
+    background-image: @(entity is Human ? "url('/Images/Human.png')" : 
+                     entity is Zombie ? "url('/Images/Zombie.png')" : 
+                     entity is BurgerKing ? "url('/Images/BurgerKing.png')" : 
+                     entity is Sanctuary ? "green" : 
+                     "url('/Images/Axe.png')");
+    background-size: cover; width: @(entity is Human ? "25px" : entity is Zombie ? "35px" : entity is BurgerKing ? "50px" : "25px"); height: @(entity is Human ? "25px" : entity is Zombie ? "35px" : entity is BurgerKing ? "50px" : "25px");">
+        @if (entity is Sanctuary sanctuary)
+        {
+            // Render Sanctuary as a circle
+            <img src="/Images/Sanctuary.png" alt="Sanctuary" style="width: 100px; height: 100px;">
+            <div class="sanctuary">
+                <div class="lifespan-bar" style="width: @(lifespan * 100 / maxLifespan)%;"></div>
+            </div>
+        }
+        else
+        {
+            // Render other entities with their lifespan bar
+            <div class="lifespan-bar" style="width: @(lifespan * 100 / maxLifespan)%;"></div>
+        }
+    </div>
+}
+else
+{
+    <div>Entity is not available.</div>
+}
+
+@code {
+    [Parameter]
+    public TEntity Entity { get; set; }
+
+    protected override void OnParametersSet() {
+        // Invoked whenever the parameters are set or changed.
+        // This could be used to subscribe to updates for the entity.
+    }
+
+    public void Dispose()
+    {
+        // Clean up any resources if the component subscribed to events or other disposables.
+    }
+}
